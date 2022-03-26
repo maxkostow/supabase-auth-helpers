@@ -6,6 +6,10 @@ export class SvelteKitRequestAdapter implements RequestAdapter {
     this.req = request;
   }
 
+  setRequestCookie(name: string, value: string) {
+    this.req.headers.set('cookie', `${name}=${value}`);
+  }
+
   getHeader(name: string) {
     return this.req.headers.get(name);
   }

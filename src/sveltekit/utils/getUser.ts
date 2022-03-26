@@ -1,7 +1,7 @@
 import { User, createClient } from '@supabase/supabase-js';
 import { CookieOptions } from '../../nextjs/types';
 import { parseCookie, setCookies, jwtDecoder } from '../../shared/utils';
-import { COOKIE_OPTIONS } from '../../nextjs/utils/constants';
+import { COOKIE_OPTIONS } from '../../shared/utils/constants';
 import { skHelper } from '../instance';
 import {
   SvelteKitRequestAdapter,

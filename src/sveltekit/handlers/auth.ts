@@ -1,6 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
 import { CookieOptions } from '../../nextjs/types';
-import { COOKIE_OPTIONS } from '../../nextjs/utils/constants';
+import { COOKIE_OPTIONS } from '../../shared/utils/constants';
 import { handleCallback } from './callback';
 import handleUser from './user';
 

@@ -1,6 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
 import { ApiError, CookieOptions } from '../../nextjs/types';
-import { COOKIE_OPTIONS } from '../../nextjs/utils/constants';
+import { COOKIE_OPTIONS } from '../../shared/utils/constants';
 import { jwtDecoder, parseCookie } from '../../shared/utils';
 import { json } from '../utils/json';
 import getUser from '../utils/getUser';

@@ -1,5 +1,5 @@
-import { SupabaseClient, User } from '@supabase/supabase-js';
-import { writable } from 'svelte/store';
+import { SupabaseClient, User, Subscription } from '@supabase/supabase-js';
+import { writable, Writable } from 'svelte/store';
 
 type UserFetcher = (
   url: string
@@ -19,13 +19,22 @@ export interface Props {
   [propName: string]: any;
 }
 
-export const UserStore = (props: Props) => {
+interface UserStore {
+  isLoading: Writable<boolean>;
+  user: Writable<User | null>;
+  accessToken: Writable<string | null>;
+  error: Writable<Error>;
+  checkAuthState: () => Subscription | null;
+  runOnPathChange: () => Promise<void>;
+}
+
+const createUserStore = (props: Props) => {
   const {
     supabaseClient,
     callbackUrl = '/api/auth/callback',
     profileUrl = '/api/auth/user',
     user: initialUser = null,
-    fetcher = userFetcher
+    fetcher = undefined
   } = props;
 
   const user = writable<User | null>(initialUser);
@@ -33,11 +42,13 @@ export const UserStore = (props: Props) => {
   const isLoading = writable<boolean>(!initialUser);
   const error = writable<Error>();
 
-  console.log('UserStore initiated!!!');
   const checkSession = async (): Promise<void> => {
     try {
-      const { user: usr, accessToken: accToken } = await fetcher(profileUrl);
-      console.log({ usr, accToken });
+      const { user: usr, accessToken: accToken } =
+        fetcher !== undefined
+          ? await fetcher(profileUrl)
+          : await userFetcher(profileUrl);
+
       if (accToken) {
         supabaseClient.auth.setAuth(accToken);
         accessToken.set(accToken);
@@ -57,11 +68,8 @@ export const UserStore = (props: Props) => {
   }
 
   const checkAuthState = () => {
-    console.log('checkAuthState called!!!');
-
     const { data: authListener } = supabaseClient.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('inside onAUthStateChange');
         isLoading.set(true);
         // Forward session from client to server where it is set in a Cookie.
         // NOTE: this will eventually be removed when the Cookie can be set differently.
@@ -71,14 +79,11 @@ export const UserStore = (props: Props) => {
           credentials: 'same-origin',
           body: JSON.stringify({ event, session })
         }).then((res) => {
-          console.log(`Checking response`);
           if (!res.ok) {
-            console.log(`The request to ${callbackUrl} failed`);
             const err = new Error(`The request to ${callbackUrl} failed`);
             error.set(err);
           }
         });
-        console.log('Checking from API route');
         // Fetch the user from the API route
         await checkSession();
         isLoading.set(false);
@@ -96,4 +101,13 @@ export const UserStore = (props: Props) => {
     checkAuthState,
     runOnPathChange
   };
+};
+
+let user: UserStore;
+
+export const UserStore = (props: Props) => {
+  if (user === undefined) {
+    user = createUserStore(props);
+  }
+  return user;
 };
